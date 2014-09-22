@@ -10,8 +10,6 @@ const char* SPRITE = "./images/purple.png";
 //Initialize ball speed
 float speed = 150.f;
 
-
-
 //Psuedo-Functions
 void UpdateMainMenu();
 void UpdateGamePlay(float a_deltaTime);
@@ -87,6 +85,10 @@ struct Paddle {
 
 };
 
+//Initialize players
+Paddle player1;
+Paddle player2;
+
 struct Ball {
 	unsigned int spriteID;
 	float xPos;
@@ -96,8 +98,20 @@ struct Ball {
 	float xSpeed;
 	float ySpeed;
 
+	//Increment score
+	void Score(){
+		if (xPos >= SCREEN_WIDTH){
+			player1.score++;
+		}
+		else {
+			player2.score++;
+		}
+	}
+
+	//Reset the ball position and increment score
 	void Reset(){
 		if (xPos >= SCREEN_WIDTH || xPos <= 0){
+			Score();
 			xPos = X_CENTER;
 			yPos = Y_CENTER;
 			xSpeed *= -1;
@@ -140,9 +154,7 @@ enum GAMESTATES{
 	END,
 };
 
-//Initialize players and ball
-Paddle player1;
-Paddle player2;
+//Initialize Ball
 Ball ball;
 
 //Initialize gamestate
@@ -156,23 +168,23 @@ int main(int argc, char* argv[])
 
 	//Initialize paddle
 	player1.SetPostion(SCREEN_WIDTH * 0.1f, SCREEN_HEIGHT / 2);
-	player1.SetSize(20, 120);
+	player1.SetSize(28, 120);
 	player1.spriteID = CreateSprite(SPRITE, player1.width, player1.height, true);
 	player1.score = 0;
 	player1.SetMoveKeys('W', 'S');
 
 	//Initialize paddle 2
 	player2.SetPostion(SCREEN_WIDTH * 0.9f, SCREEN_HEIGHT / 2);
-	player2.SetSize(20, 120);
+	player2.SetSize(28, 120);
 	player2.spriteID = CreateSprite(SPRITE, player2.width, player2.height, true);
-	player2.score = 0;
+	player2.score = 8;
 	player2.SetMoveKeys(265, 264);
 
 	//Initialize ball
 	ball.xPos = X_CENTER;
 	ball.yPos = Y_CENTER;
-	ball.width = 32;
-	ball.height = 32;
+	ball.width = 20;
+	ball.height = 20;
 	ball.xSpeed = speed;
 	ball.ySpeed = speed;
 	ball.spriteID = CreateSprite(SPRITE, ball.width, ball.height, true);
@@ -227,7 +239,12 @@ void UpdateMainMenu(){
 }
 
 void UpdateEndGame(){
-	DrawString("Player 1 Wins", X_CENTER - 100, Y_CENTER);
+	if (player1.score > player2.score){
+		DrawString("Player 1 Wins", X_CENTER - 100, Y_CENTER);
+	}
+	else{
+		DrawString("Player 2 Wins", X_CENTER - 100, Y_CENTER);
+	}
 	DrawString("Press <Enter> to Play Again!", X_CENTER - 170, Y_CENTER - 40);
 
 	if (IsKeyDown(256)){
@@ -263,22 +280,20 @@ void UpdateGamePlay(float a_deltaTime){
 
 	//Ball collision with top and bottom screen
 	ball.yScreenCollision();
-	/*if (ball.yPos >= SCREEN_HEIGHT - (ball.height / 2) || ball.yPos <= 0 + (ball.height / 2)){
-		ball.ySpeed *= -1;
-	}*/
 
-	//Ball reset when out of bounds
-	ball.Reset();
+	//Ball X collision
 	if (ball.xPos - ball.xChange(a_deltaTime) < player2.GetLeft()){
 		if (ball.GetBottom() <= player2.GetTop() && ball.GetTop() >= player2.GetBottom()){
-			if (ball.xPos >= player2.GetLeft()){
+			if (ball.GetRight() >= player2.GetLeft()){
+				ball.xPos = player2.GetLeft() - (ball.width / 2);
 				ball.xSpeed *= -1;
 			}
 		}
 	}
 	if (ball.xPos - ball.xChange(a_deltaTime) > player1.GetRight()){
 		if (ball.GetBottom() <= player1.GetTop() && ball.GetTop() >= player1.GetBottom()){
-			if (ball.xPos <= player1.GetRight()){
+			if (ball.GetLeft() <= player1.GetRight()){
+				ball.xPos = player1.GetRight() + (ball.width / 2);
 				ball.xSpeed *= -1;
 			}
 		}
@@ -288,6 +303,7 @@ void UpdateGamePlay(float a_deltaTime){
 	if (ball.GetBottom() - ball.yChange(a_deltaTime) > player2.GetTop()){
 		if (ball.GetLeft() <= player2.GetRight() && ball.GetRight() >= player2.GetLeft()){
 			if (ball.GetBottom() <= player2.GetTop()){
+				ball.yPos = player2.GetTop() + (ball.height / 2);
 				ball.ySpeed *= -1;
 			}
 		}
@@ -295,6 +311,7 @@ void UpdateGamePlay(float a_deltaTime){
 	if (ball.GetBottom() - ball.yChange(a_deltaTime) > player1.GetTop()){
 		if (ball.GetLeft() <= player1.GetRight() && ball.GetRight() >= player1.GetLeft()){
 			if (ball.GetBottom() <= player1.GetTop()){
+				ball.yPos = player1.GetTop() + (ball.height / 2);
 				ball.ySpeed *= -1;
 			}
 		}
@@ -304,6 +321,7 @@ void UpdateGamePlay(float a_deltaTime){
 	if (ball.GetTop() - ball.yChange(a_deltaTime) < player2.GetBottom()){
 		if (ball.GetLeft() <= player2.GetRight() && ball.GetRight() >= player2.GetLeft()){
 			if (ball.GetTop() >= player2.GetBottom()){
+				ball.yPos = player2.GetBottom() - (ball.height / 2);
 				ball.ySpeed *= -1;
 			}
 		}
@@ -312,11 +330,14 @@ void UpdateGamePlay(float a_deltaTime){
 	if (ball.GetTop() - ball.yChange(a_deltaTime) < player1.GetBottom()){
 		if (ball.GetLeft() <= player1.GetRight() && ball.GetRight() >= player1.GetLeft()){
 			if (ball.GetTop() >= player1.GetBottom()){
+				ball.yPos = player1.GetBottom() - (ball.height / 2);
 				ball.ySpeed *= -1;
 			}
 		}
 	}
 
+	//Ball reset when out of bounds
+	ball.Reset();
 
 	//Ball standard movement
 	ball.yPos += a_deltaTime * ball.ySpeed;
@@ -325,13 +346,4 @@ void UpdateGamePlay(float a_deltaTime){
 	if (player1.score >= 10 || player2.score >= 10){
 		currentState = END;
 	}
-}
-
-
-float GetDistance(float a_deltaTime){
-	return a_deltaTime * speed;
-}
-
-void Collision(){
-
 }
