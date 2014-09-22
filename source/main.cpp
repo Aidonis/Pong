@@ -1,24 +1,26 @@
 ﻿#include "AIE.h"
 #include <iostream>
 
-int screenWidth = 800;
-int screenHeight = 600;
-const float X_CENTER = screenWidth / 2;
-const float Y_CENTER = screenHeight / 2;
+int SCREEN_WIDTH = 800;
+int SCREEN_HEIGHT = 600;
+const float X_CENTER = SCREEN_WIDTH / 2;
+const float Y_CENTER = SCREEN_HEIGHT / 2;
 const char* SPRITE = "./images/purple.png";
 
 //Initialize ball speed
-float speed = 210.f;
-float xBallSpeed = speed;
-float yBallSpeed = speed;
+float speed = 150.f;
+
 
 
 //Psuedo-Functions
 void UpdateMainMenu();
 void UpdateGamePlay(float a_deltaTime);
 void UpdateEndGame();
-float GetBallLeftSide();
-float GetBallRightSide();
+float GetLeft(float a_x, int a_width);
+float GetRight(float a_x, int a_width);
+float GetTop(float a_y, int a_height);
+float GetBottom(float a_y, int a_height);
+float GetDistance(float a_position1, float a_position2);
 
 
 struct Paddle {
@@ -54,7 +56,34 @@ struct Paddle {
 	};
 
 	void Move(float a_deltaTime){
-	};
+		if (IsKeyDown(moveUp)){
+			if (yPos >= SCREEN_HEIGHT - (height / 2)){
+				yPos = SCREEN_HEIGHT - (height / 2);
+			}
+			yPos += a_deltaTime * 200.f;
+		}
+		if (IsKeyDown(moveDown)){
+			if (yPos <= (height / 2)){
+				yPos = (height / 2);
+			}
+			yPos -= a_deltaTime * 200.f;
+		}
+	}
+
+	float GetLeft(){
+		return xPos - (width / 2);
+	}
+
+	float GetRight(){
+		return xPos + (width / 2);
+	}
+	float GetTop(){
+		return yPos + (height / 2);
+	}
+
+	float GetBottom(){
+		return yPos - (height / 2);
+	}
 
 };
 
@@ -64,6 +93,45 @@ struct Ball {
 	float yPos;
 	int width;
 	int height;
+	float xSpeed;
+	float ySpeed;
+
+	void Reset(){
+		if (xPos >= SCREEN_WIDTH || xPos <= 0){
+			xPos = X_CENTER;
+			yPos = Y_CENTER;
+			xSpeed *= -1;
+		}
+	}
+
+	void yScreenCollision(){
+		if (yPos >= SCREEN_HEIGHT - (height / 2) || yPos <= 0 + (height / 2)){
+			ySpeed *= -1;
+		}
+	}
+
+	float GetLeft(){
+		return xPos - (width / 2);
+	}
+
+	float GetRight(){
+		return xPos + (width / 2);
+	}
+
+	float GetTop(){
+		return yPos + (height / 2);
+	}
+
+	float GetBottom(){
+		return yPos - (height / 2);
+	}
+
+	float xChange(float a_deltaTime){
+		return (a_deltaTime * xSpeed);
+	}
+	float yChange(float a_deltaTime){
+		return (a_deltaTime * ySpeed);
+	}
 };
 
 enum GAMESTATES{
@@ -82,27 +150,31 @@ GAMESTATES currentState = MAIN_MENU;
 
 int main(int argc, char* argv[])
 {
-	Initialise(screenWidth, screenHeight, false, "My Awesome Game");
+	Initialise(SCREEN_WIDTH, SCREEN_HEIGHT, false, "My Awesome Game");
 
 	SetBackgroundColour(SColour(0, 0, 0, 255));
 
 	//Initialize paddle
-	player1.SetPostion(screenWidth * 0.1f, screenHeight / 2);
+	player1.SetPostion(SCREEN_WIDTH * 0.1f, SCREEN_HEIGHT / 2);
 	player1.SetSize(20, 120);
 	player1.spriteID = CreateSprite(SPRITE, player1.width, player1.height, true);
 	player1.score = 0;
+	player1.SetMoveKeys('W', 'S');
 
 	//Initialize paddle 2
-	player2.SetPostion(screenWidth * 0.9f, screenHeight / 2);
+	player2.SetPostion(SCREEN_WIDTH * 0.9f, SCREEN_HEIGHT / 2);
 	player2.SetSize(20, 120);
 	player2.spriteID = CreateSprite(SPRITE, player2.width, player2.height, true);
 	player2.score = 0;
+	player2.SetMoveKeys(265, 264);
 
 	//Initialize ball
 	ball.xPos = X_CENTER;
 	ball.yPos = Y_CENTER;
 	ball.width = 32;
 	ball.height = 32;
+	ball.xSpeed = speed;
+	ball.ySpeed = speed;
 	ball.spriteID = CreateSprite(SPRITE, ball.width, ball.height, true);
 
 
@@ -140,7 +212,7 @@ int main(int argc, char* argv[])
 	return 0;
 }
 void UpdateMainMenu(){
-	DrawString("Press Enter to Start!", (screenWidth / 2) - 120, screenHeight / 2);
+	DrawString("Press Enter to Start!", X_CENTER - 120, Y_CENTER);
 	if (IsKeyDown(257)){
 		currentState = GAMEPLAY;
 	}
@@ -155,8 +227,8 @@ void UpdateMainMenu(){
 }
 
 void UpdateEndGame(){
-	DrawString("Player 1 wins", (screenWidth / 2) - 100, screenHeight / 2);
-	DrawString("Press Enter to Play Again!", (screenWidth / 2) - 170, (screenHeight / 2) - 40);
+	DrawString("Player 1 Wins", X_CENTER - 100, Y_CENTER);
+	DrawString("Press <Enter> to Play Again!", X_CENTER - 170, Y_CENTER - 40);
 
 	if (IsKeyDown(256)){
 		currentState = MAIN_MENU;
@@ -181,123 +253,83 @@ void UpdateGamePlay(float a_deltaTime){
 	char score2[3];
 
 	//Draw UI
-	DrawString("VS", screenWidth / 2, screenHeight * 0.9f);
-	DrawString(itoa(player1.score, score1, 10), screenWidth * 0.3f, screenHeight * 0.9f);
-	DrawString(itoa(player2.score, score2, 10), screenWidth * 0.7f, screenHeight * 0.9f);
+	DrawString("VS", X_CENTER, SCREEN_HEIGHT * 0.9f);
+	DrawString(itoa(player1.score, score1, 10), SCREEN_WIDTH * 0.3f, SCREEN_HEIGHT * 0.9f);
+	DrawString(itoa(player2.score, score2, 10), SCREEN_WIDTH * 0.7f, SCREEN_HEIGHT * 0.9f);
 
-
-	//Player1 Movement
-	if (IsKeyDown('W')){
-		if (player1.yPos >= screenHeight - (player1.height / 2)){
-			player1.yPos = screenHeight - (player1.height / 2);
-		}
-		player1.yPos += a_deltaTime * 200.f;
-	}
-	if (IsKeyDown('S')){
-		if (player1.yPos <= (player1.height / 2)){
-			player1.yPos = (player1.height / 2);
-		}
-		player1.yPos -= a_deltaTime * 200.f;
-	}
-
-	//Player2 Movement / Collision
-	if (IsKeyDown(265)){
-		if (player2.yPos >= screenHeight - (player2.height / 2)){
-			player2.yPos = screenHeight - (player2.height / 2);
-		}
-		player2.yPos += a_deltaTime * 200.f;
-	}
-	if (IsKeyDown(264)){
-		if (player2.yPos <= (player2.height / 2)){
-			player2.yPos = (player2.height / 2);
-		}
-		player2.yPos -= a_deltaTime * 200.f;
-	}
+	//Player Movement
+	player1.Move(a_deltaTime);
+	player2.Move(a_deltaTime);
 
 	//Ball collision with top and bottom screen
-	if (ball.yPos >= screenHeight - (ball.height / 2) || ball.yPos <= 0 + (ball.height / 2)){
-		yBallSpeed *= -1;
-	}
+	ball.yScreenCollision();
+	/*if (ball.yPos >= SCREEN_HEIGHT - (ball.height / 2) || ball.yPos <= 0 + (ball.height / 2)){
+		ball.ySpeed *= -1;
+	}*/
 
 	//Ball reset when out of bounds
-	if (ball.xPos >= screenWidth || ball.xPos <= 0){
-		if (ball.xPos >= screenWidth){
-			player1.score++;
-		}
-		else{
-			player2.score++;
-		}
-		ball.xPos = X_CENTER;
-		ball.yPos = Y_CENTER;
-		xBallSpeed *= -1;
-	}
-
-	//Ball collision with paddles
-	//X Collision
-	if (ball.xPos - (a_deltaTime * xBallSpeed) < player2.xPos - (ball.width / 2)){
-		if (ball.yPos - (ball.height / 2) <= player2.yPos + (player2.height / 2) && ball.yPos + (ball.height / 2 ) >= player2.yPos - (player2.height / 2)){
-			if (ball.xPos >= player2.xPos - (ball.width / 2)){
-				xBallSpeed *= -1;
+	ball.Reset();
+	if (ball.xPos - ball.xChange(a_deltaTime) < player2.GetLeft()){
+		if (ball.GetBottom() <= player2.GetTop() && ball.GetTop() >= player2.GetBottom()){
+			if (ball.xPos >= player2.GetLeft()){
+				ball.xSpeed *= -1;
 			}
 		}
 	}
-	if (ball.xPos - (a_deltaTime * xBallSpeed) > player1.xPos + (ball.width / 2)){
-		if (ball.yPos - (ball.height / 2) <= player1.yPos + (player1.height / 2) && ball.yPos + (ball.height / 2 ) >= player1.yPos - (player1.height / 2)){
-			if (ball.xPos <= player1.xPos + (ball.width / 2)){
-				xBallSpeed *= -1;
+	if (ball.xPos - ball.xChange(a_deltaTime) > player1.GetRight()){
+		if (ball.GetBottom() <= player1.GetTop() && ball.GetTop() >= player1.GetBottom()){
+			if (ball.xPos <= player1.GetRight()){
+				ball.xSpeed *= -1;
 			}
 		}
 	}
 
 	//Y Collision Top
-	if (ball.yPos - (ball.height / 2) - (a_deltaTime * yBallSpeed) > player2.yPos + (player2.height / 2)){
-		if (ball.xPos - (ball.width / 2) <= player2.xPos + (player2.width / 2) && ball.xPos + (ball.width / 2) >= player2.xPos - (player2.width / 2)){
-			if ((ball.yPos - (ball.height / 2)) <= player2.yPos + (player2.height / 2)){
-				yBallSpeed *= -1;
+	if (ball.GetBottom() - ball.yChange(a_deltaTime) > player2.GetTop()){
+		if (ball.GetLeft() <= player2.GetRight() && ball.GetRight() >= player2.GetLeft()){
+			if (ball.GetBottom() <= player2.GetTop()){
+				ball.ySpeed *= -1;
 			}
 		}
 	}
-	if (ball.yPos - (ball.height / 2) - (a_deltaTime * yBallSpeed) > player1.yPos + (player1.height / 2)){
-		if (ball.xPos - (ball.width / 2) <= player1.xPos + (player1.width / 2) && ball.xPos + (ball.width / 2) >= player1.xPos - (player1.width / 2)){
-			if ((ball.yPos - (ball.height / 2)) <= player1.yPos + (player1.height / 2)){
-				yBallSpeed *= -1;
+	if (ball.GetBottom() - ball.yChange(a_deltaTime) > player1.GetTop()){
+		if (ball.GetLeft() <= player1.GetRight() && ball.GetRight() >= player1.GetLeft()){
+			if (ball.GetBottom() <= player1.GetTop()){
+				ball.ySpeed *= -1;
 			}
 		}
 	}
 
 	//Y Collision Bottom
-	if (ball.yPos + (ball.height / 2) - (a_deltaTime * yBallSpeed) < player2.yPos - (player2.height / 2)){
-		if (ball.xPos - (ball.width / 2) <= player2.xPos + (player2.width / 2) && ball.xPos + (ball.width / 2) >= player2.xPos - (player2.width / 2)){
-			if ((ball.yPos + (ball.height / 2)) >= player2.yPos - (player2.height / 2)){
-				yBallSpeed *= -1;
+	if (ball.GetTop() - ball.yChange(a_deltaTime) < player2.GetBottom()){
+		if (ball.GetLeft() <= player2.GetRight() && ball.GetRight() >= player2.GetLeft()){
+			if (ball.GetTop() >= player2.GetBottom()){
+				ball.ySpeed *= -1;
 			}
 		}
 	}
 
-	if (ball.yPos + (ball.height / 2) - (a_deltaTime * yBallSpeed) < player1.yPos - (player1.height / 2)){
-		if (ball.xPos - (ball.width / 2) <= player1.xPos + (player1.width / 2) && ball.xPos + (ball.width / 2) >= player1.xPos - (player1.width / 2)){
-			if ((ball.yPos + (ball.height / 2)) >= player1.yPos - (player1.height / 2)){
-				yBallSpeed *= -1;
+	if (ball.GetTop() - ball.yChange(a_deltaTime) < player1.GetBottom()){
+		if (ball.GetLeft() <= player1.GetRight() && ball.GetRight() >= player1.GetLeft()){
+			if (ball.GetTop() >= player1.GetBottom()){
+				ball.ySpeed *= -1;
 			}
 		}
 	}
 
 
 	//Ball standard movement
-	ball.yPos += a_deltaTime * yBallSpeed;
-	ball.xPos += a_deltaTime * xBallSpeed;
+	ball.yPos += a_deltaTime * ball.ySpeed;
+	ball.xPos += a_deltaTime * ball.xSpeed;
 
 	if (player1.score >= 10 || player2.score >= 10){
 		currentState = END;
 	}
 }
 
-float GetLeftSide(){
-	return 0;
-}
 
-float GetRightSide(){
-	return 0;
+float GetDistance(float a_deltaTime){
+	return a_deltaTime * speed;
 }
 
 void Collision(){
