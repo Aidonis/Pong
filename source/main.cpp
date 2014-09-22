@@ -5,6 +5,7 @@ int screenWidth = 800;
 int screenHeight = 600;
 const float X_CENTER = screenWidth / 2;
 const float Y_CENTER = screenHeight / 2;
+const char* SPRITE = "./images/purple.png";
 
 //Initialize ball speed
 float speed = 210.f;
@@ -16,6 +17,9 @@ float yBallSpeed = speed;
 void UpdateMainMenu();
 void UpdateGamePlay(float a_deltaTime);
 void UpdateEndGame();
+float GetBallLeftSide();
+float GetBallRightSide();
+
 
 struct Paddle {
 	unsigned int spriteID;
@@ -85,13 +89,13 @@ int main(int argc, char* argv[])
 	//Initialize paddle
 	player1.SetPostion(screenWidth * 0.1f, screenHeight / 2);
 	player1.SetSize(20, 120);
-	player1.spriteID = CreateSprite("./images/crate_sideup.png", player1.width, player1.height, true);
+	player1.spriteID = CreateSprite(SPRITE, player1.width, player1.height, true);
 	player1.score = 0;
 
 	//Initialize paddle 2
 	player2.SetPostion(screenWidth * 0.9f, screenHeight / 2);
 	player2.SetSize(20, 120);
-	player2.spriteID = CreateSprite("./images/crate_sideup.png", player2.width, player2.height, true);
+	player2.spriteID = CreateSprite(SPRITE, player2.width, player2.height, true);
 	player2.score = 0;
 
 	//Initialize ball
@@ -99,7 +103,7 @@ int main(int argc, char* argv[])
 	ball.yPos = Y_CENTER;
 	ball.width = 32;
 	ball.height = 32;
-	ball.spriteID = CreateSprite("./images/crate_sideup.png", ball.width, ball.height, true);
+	ball.spriteID = CreateSprite(SPRITE, ball.width, ball.height, true);
 
 
 	//Game Loop
@@ -286,6 +290,14 @@ void UpdateGamePlay(float a_deltaTime){
 	if (player1.score >= 10 || player2.score >= 10){
 		currentState = END;
 	}
+}
+
+float GetLeftSide(){
+	return 0;
+}
+
+float GetRightSide(){
+	return 0;
 }
 
 void Collision(){
