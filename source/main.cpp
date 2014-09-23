@@ -50,6 +50,8 @@ const char* PLAYER_2_WINS = "Player 2 wins!";
 const char* HIGH_SCORE_TEXT = "The biggest loser with a score of :";
 const char* HIGH_SCORE_LOG = "Biggestloser.pong";
 const char* HIGH_SCORE_TO_MAIN = "Press <F1> to go to Main Menu";
+const char* HIGH_SCORE_RESET = "Press <R> to reset biggest loser";
+
 //Game sprite location
 const char* SPRITE = "./images/purple.png";
 
@@ -284,10 +286,18 @@ void UpdateHighScore(){
 	DrawString(HIGH_SCORE_TEXT, X_CENTER - 190, Y_CENTER);
 	DrawString(itoa(highScore, buffer, 10), X_CENTER + 225, Y_CENTER);
 	DrawString(HIGH_SCORE_TO_MAIN, X_CENTER - 190, Y_CENTER - 40);
+	DrawString(HIGH_SCORE_RESET, X_CENTER - 190, Y_CENTER - 80);
 	
 	//Change to Main_Menu
 	if (IsKeyDown(F1_KEYCODE)){
 		currentState = MAIN_MENU;
+	}
+
+	//Reset the score
+	if (IsKeyDown('R')){
+		highScore = 0;
+		writeFile();
+		loadFile();
 	}
 }
 
