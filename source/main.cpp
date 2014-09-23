@@ -32,7 +32,7 @@ const int UP_ARROW_KEYCODE = 265;
 const int DOWN_ARROW_KEYCODE = 264;
 const int MAX_CHAR_COUNT = 10;
 
-//Paddles
+//Paddles Speed
 const int PADDLE_SPEED = 225;
 
 //Main Menu
@@ -71,9 +71,6 @@ float GetRight(float a_x, int a_width);
 float GetTop(float a_y, int a_height);
 float GetBottom(float a_y, int a_height);
 float GetDistance(float a_position1, float a_position2);
-
-//
-
 
 //Create paddle structure
 struct Paddle {
