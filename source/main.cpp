@@ -32,8 +32,9 @@ const int UP_ARROW_KEYCODE = 265;
 const int DOWN_ARROW_KEYCODE = 264;
 const int MAX_CHAR_COUNT = 10;
 
-//Paddles Speed
-const int PADDLE_SPEED = 225;
+//Speeds
+const int PADDLE_SPEED = 200;
+const float BALL_SPEED = 260.f;
 
 //Main Menu
 const char* MAIN_MENU_START_TEXT = "Press <Enter> to Start";
@@ -440,9 +441,6 @@ void loadFile(){
 }
 
 void InitializeGameObjects(){
-	//Initialize speeds
-	float speed = 200.f;
-
 	//Initialize paddle
 	player1.SetPostion(SCREEN_WIDTH * 0.1f, SCREEN_HEIGHT / 2);
 	player1.SetSize(28, 120);
@@ -462,7 +460,7 @@ void InitializeGameObjects(){
 	ball.yPos = Y_CENTER;
 	ball.width = 20;
 	ball.height = 20;
-	ball.xSpeed = speed;
-	ball.ySpeed = speed;
+	ball.xSpeed = BALL_SPEED;
+	ball.ySpeed = BALL_SPEED;
 	ball.spriteID = CreateSprite(SPRITE, ball.width, ball.height, true);
 }
