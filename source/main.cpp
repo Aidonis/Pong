@@ -1,5 +1,8 @@
 ﻿#include "AIE.h"
 #include <iostream>
+#include <fstream>
+
+
 
 int SCREEN_WIDTH = 800;
 int SCREEN_HEIGHT = 600;
@@ -10,10 +13,18 @@ const char* SPRITE = "./images/purple.png";
 //Initialize ball speed
 float speed = 150.f;
 
+//Initialize highscore
+int highScore = 0;
+
+//Initialize char buffer
+char buffer[10];
+
 //Psuedo-Functions
 void UpdateMainMenu();
 void UpdateGamePlay(float a_deltaTime);
 void UpdateEndGame();
+void makeFile();
+void writeFile();
 float GetLeft(float a_x, int a_width);
 float GetRight(float a_x, int a_width);
 float GetTop(float a_y, int a_height);
@@ -240,12 +251,20 @@ void UpdateMainMenu(){
 
 void UpdateEndGame(){
 	if (player1.score > player2.score){
+		highScore = player1.score;
 		DrawString("Player 1 Wins", X_CENTER - 100, Y_CENTER);
 	}
 	else{
+		highScore = player2.score;
 		DrawString("Player 2 Wins", X_CENTER - 100, Y_CENTER);
 	}
-	DrawString("Press <Enter> to Play Again!", X_CENTER - 170, Y_CENTER - 40);
+	DrawString("Press <Esc> to quit!", X_CENTER - 140, Y_CENTER - 40);
+	DrawString("The highscore is currently:", X_CENTER - 190, Y_CENTER - 80);
+	DrawString(itoa(highScore,buffer,10), X_CENTER + 145, Y_CENTER - 80);
+
+	
+	writeFile();
+	makeFile();
 
 	if (IsKeyDown(256)){
 		currentState = MAIN_MENU;
@@ -265,14 +284,10 @@ void UpdateGamePlay(float a_deltaTime){
 	MoveSprite(player2.spriteID, player2.xPos, player2.yPos);
 	DrawSprite(player2.spriteID);
 
-	//Initialize score buffer
-	char score1[3];
-	char score2[3];
-
 	//Draw UI
 	DrawString("VS", X_CENTER, SCREEN_HEIGHT * 0.9f);
-	DrawString(itoa(player1.score, score1, 10), SCREEN_WIDTH * 0.3f, SCREEN_HEIGHT * 0.9f);
-	DrawString(itoa(player2.score, score2, 10), SCREEN_WIDTH * 0.7f, SCREEN_HEIGHT * 0.9f);
+	DrawString(itoa(player1.score, buffer, 10), SCREEN_WIDTH * 0.3f, SCREEN_HEIGHT * 0.9f);
+	DrawString(itoa(player2.score, buffer, 10), SCREEN_WIDTH * 0.7f, SCREEN_HEIGHT * 0.9f);
 
 	//Player Movement
 	player1.Move(a_deltaTime);
@@ -343,7 +358,25 @@ void UpdateGamePlay(float a_deltaTime){
 	ball.yPos += a_deltaTime * ball.ySpeed;
 	ball.xPos += a_deltaTime * ball.xSpeed;
 
-	if (player1.score >= 10 || player2.score >= 10){
+	if (player1.score >= 9 || player2.score >= 9){
 		currentState = END;
 	}
+}
+
+void writeFile(){
+	std::fstream file;
+	file.open("Highscore.txt", std::ios::out);
+	file << highScore;
+	file.close();
+}
+
+void makeFile(){
+
+	std::fstream file;
+	file.open("Highscore.txt", std::ios::in);
+
+	//character buffer
+	file.getline(buffer, 10);
+	highScore = atoi(buffer);
+	file.close();
 }
