@@ -188,7 +188,7 @@ int main(int argc, char* argv[])
 	player2.SetPostion(SCREEN_WIDTH * 0.9f, SCREEN_HEIGHT / 2);
 	player2.SetSize(28, 120);
 	player2.spriteID = CreateSprite(SPRITE, player2.width, player2.height, true);
-	player2.score = 8;
+	player2.score = 0;
 	player2.SetMoveKeys(265, 264);
 
 	//Initialize ball
@@ -239,7 +239,7 @@ void UpdateMainMenu(){
 	if (IsKeyDown(257)){
 		currentState = GAMEPLAY;
 	}
-	if (IsKeyDown(290)){
+	if (IsKeyDown(291)){
 		currentState = END;
 	}
 	if (IsKeyDown(256)){
@@ -266,13 +266,13 @@ void UpdateEndGame(){
 	writeFile();
 	makeFile();
 
-	if (IsKeyDown(256)){
+	if (IsKeyDown(290)){
 		currentState = MAIN_MENU;
 	}
 }
 
 void UpdateGamePlay(float a_deltaTime){
-	if (IsKeyDown(256)){
+	if (IsKeyDown(290)){
 		currentState = MAIN_MENU;
 	}
 
@@ -358,7 +358,7 @@ void UpdateGamePlay(float a_deltaTime){
 	ball.yPos += a_deltaTime * ball.ySpeed;
 	ball.xPos += a_deltaTime * ball.xSpeed;
 
-	if (player1.score >= 9 || player2.score >= 9){
+	if (player1.score >= 10 || player2.score >= 10){
 		currentState = END;
 	}
 }
